@@ -1,0 +1,21 @@
+{
+    "manifest_version": 3,
+    "name": "Jiralize",
+    "author": "bruno.cecchini@prodemge.gov.br",
+    "version": "1.0",
+    "description": "Get data from e-mail and insert into Jira",
+    "permissions": ["scripting", "tabs", "activeTab"],
+    "action": {
+        "default_title": "Jiralize",
+        "default_icon": "icon.png",
+        "default_popup": "popup.html"
+    },
+    "host_permissions": [
+        "<all_urls>",
+        "http://*/*",
+        "https://*/*"
+    ],
+    "background": {
+        "service_worker": "background.js"
+    }
+}
