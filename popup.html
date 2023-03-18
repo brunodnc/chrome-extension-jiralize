@@ -8,15 +8,40 @@
         .invisible {
             visibility: hidden;
         }
+
+        .flex {
+            display: flex;
+            flex-direction: column;
+            width: 500px;
+        }
+
+        #title {
+            font-size: larger;
+        }
+
+        .flex-row {
+            flex-wrap: nowrap;
+        }
+
+
     </style>
     
 </head>
 <body>
-    <h1 id="title">oi</h1>
-    <button class="visible" id="readPA">Ler PA</button>
-    <p id="readMessage" class="invisible">PA lido</p>
-    <span id="error"></span>
-    <button id="pastePA">JIRALIZE</button>
+    <section class="flex">
+        <h1 id="title">Jiralize-se.</h1>
+        <div class="flex-row">
+            <button class="visible" id="readPA">Ler PA</button>
+            <p id="messageRead" class="invisible">PA lido</p>
+        </div>
+        <div class="flex-row">
+            <label for="inserirComentarios">Inserir os &uacute;ltimos </label><input id="quantidadeComentarios" type="number" min="1">
+            <button id="inserirComentarios">Coment&aacute;rios</button>
+        </div>
+        <br>
+        <span id="error"></span>
+        <button id="pastePA">JIRALIZE</button>
+    </section>
 </body>
 <script src="popup.js" type="module"></script>
 </html>
