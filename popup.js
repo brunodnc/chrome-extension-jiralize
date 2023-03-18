@@ -23,7 +23,7 @@ document.getElementById("inserirComentarios").addEventListener("click", async fu
         chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
           const quantidade = document.getElementById("quantidadeComentarios").value;
           if (!quantidade) {
-              document.getElementById("error").textContent = "Por favor, insira um número válido de comentários";
+              document.getElementById("error").innerText = "Por favor, insira um número válido de comentários";
               return;
           }
           chrome.scripting.executeScript({
@@ -36,7 +36,6 @@ document.getElementById("inserirComentarios").addEventListener("click", async fu
             }
             else {
               chrome.runtime.sendMessage({method: "get"}, (response) => {
-                document.getElementById("messageRead").className = 'visible';
                 document.getElementById("error").value = response.value;
               });
             }
@@ -45,8 +44,41 @@ document.getElementById("inserirComentarios").addEventListener("click", async fu
     });
   });
 
+document.getElementById("pesquisarPorUltimoPA").addEventListener("click", async function() {
+  chrome.tabs.query({ active: true, currentWindow: true}, function(tabs) {
+    chrome.scripting.executeScript({
+      target: { tabId: tabs[0].id },
+      function: pesquisarPorUltimoPA,
+    }, () => {
+      if (chrome.runtime.lastError) {
+        document.getElementById("error").innerText = "Error: " + chrome.runtime.lastError.message;
+      } else {
+        window.close();
+      }
+    })
+  })
+})
+
+
+document.getElementById("pesquisarPorPrimeiroPA").addEventListener("click", async function() {
+  chrome.tabs.query({ active: true, currentWindow: true}, function(tabs) {
+    chrome.scripting.executeScript({
+      target: { tabId: tabs[0].id },
+      function: pesquisarPorPrimeiroPA,
+    }, () => {
+      if (chrome.runtime.lastError) {
+        document.getElementById("error").innerText = "Error: " + chrome.runtime.lastError.message;
+      } else {
+        window.close();
+      }
+    })
+  })
+})
+
+
+
 document.getElementById("pastePA").onclick = () => {
-  chrome.runtime.sendMessage({method: "set" }, () => {
+  chrome.runtime.sendMessage({method: "get" }, () => {
     chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
       chrome.scripting.executeScript({
         target: { tabId: tabs[0].id },
@@ -57,7 +89,7 @@ document.getElementById("pastePA").onclick = () => {
         }
         else {
           chrome.runtime.sendMessage({method: "get"}, (response) => {
-            document.getElementById("error").value = response.value;
+            document.getElementById("error").innerText = response.value;
           });
         }
       });
@@ -141,16 +173,16 @@ function getDocumentInfo() {
       descricao.protocolo = parseHtmlToString(matchProtocolo[1]);
     }
   
-    if (matchDestinatario && matchDestinatario.length > 1) {
-      descricao.destinatario = parseHtmlToString(matchDestinatario[1].trim());
-    }
-  
     if (matchCopia && matchCopia.length > 1) {
       descricao.copia = parseHtmlToString(matchCopia[1].trim());
     }
   
     if (matchConteudo && matchConteudo.length > 1) {
       descricao.conteudo = parseHtmlToString(matchConteudo[1]);
+    }
+
+    if (matchDestinatario && matchDestinatario.length > 1) {
+      descricao.destinatario = parseHtmlToString(matchDestinatario[1].trim()).replace(descricao.conteudo, "");
     }
   
     if (matchAnexo && matchAnexo.length > 2) {
@@ -208,12 +240,17 @@ async function inserirComentarios(quantidade) {
   const { value } = await chrome.runtime.sendMessage({method: "get"});
   documento = JSON.parse(value);
 
-  console.log(quantidade);
+  
   const commentArea = document.querySelector("textarea#comment");
 
   const quantidadeNaoLida = documento.listaDescricaos.length - quantidade;
   const listaDescricaos = documento.listaDescricaos.slice(quantidadeNaoLida);
   let descricao = "";
+
+  if (quantidade < 1 || quantidade > listaDescricaos.length) {
+    alert(`Número ${quantidade} inválido`);
+    return
+  }
 
   for (let i = 0; i < listaDescricaos.length; i += 1) {
     let stringAnexos = ``
@@ -223,8 +260,8 @@ async function inserirComentarios(quantidade) {
       stringAnexos += `\n${anexo.nomeDoArquivo} - ${anexo.tamanho}`;
     }
 
-    let email = `----\n ~~~ ${quantidadeNaoLida + i + 1}° ~~~ \n----\n\n` + `Origem: ${listaDescricaos[i].titulo}\n` + `Destinatário: ${listaDescricaos[i].destinatario}\n` + `Em cópia: ${listaDescricaos[i].copia}`
-     + `Data: ${listaDescricaos[i].data}\n` + `Protocolo: ${listaDescricaos[i].protocolo}\n` + `\n\n` + listaDescricaos[i].conteudo + stringAnexos;
+    let email = `----\n ~~~ ${quantidadeNaoLida + i + 1}° ~~~ \n----\n\n` + `Origem: ${listaDescricaos[i].titulo}\n` + `Destinatário: ${listaDescricaos[i].destinatario}\n` + `${listaDescricaos[i].copia ? `Em cópia: ${listaDescricaos[i].copia}\n` : ""}`
+     + `Data: ${listaDescricaos[i].data}\n` + `Protocolo: ${listaDescricaos[i].protocolo}\n` + `\n` + listaDescricaos[i].conteudo + stringAnexos;
     
 
     descricao += email + "\n\n";
@@ -233,13 +270,30 @@ async function inserirComentarios(quantidade) {
   commentArea.value = descricao;
 }
 
+async function pesquisarPorPrimeiroPA() {
+  const { value } = await chrome.runtime.sendMessage({method: "get"});
+  documento = JSON.parse(value);
+
+  const inputBusca = document.querySelector("textarea#advanced-search");
+  inputBusca.value = `"Protocolo PA" ~ ` + documento.protocolosAtendimento[0];
+  inputBusca.click();
+  inputBusca.dispatchEvent(new KeyboardEvent('keydown', {key: "Enter"}))
+}
+
+async function pesquisarPorUltimoPA() {
+  const { value } = await chrome.runtime.sendMessage({method: "get"});
+  documento = JSON.parse(value);
+
+  const inputBusca = document.querySelector("textarea#advanced-search");
+  inputBusca.value = `"Protocolo PA" ~ ` + documento.protocolosAtendimento[documento.protocolosAtendimento.length - 1];
+  inputBusca.click();
+  inputBusca.dispatchEvent(new KeyboardEvent('keydown', {key: "Enter"}))
+}
 
 
 async function jiralize() {
   const { value } = await chrome.runtime.sendMessage({method: "get"});
   documento = JSON.parse(value);
-
-  console.log("valor no jiralize: ", documento);
 
   const resumo = document.querySelector("input#summary");
   resumo.value = documento.titulo;
@@ -252,7 +306,6 @@ async function jiralize() {
 
 
   const listaDescricaos = documento.listaDescricaos;
-  console.log(listaDescricaos)
   let descricao = "";
 
   for (let i = 0; i < listaDescricaos.length; i += 1) {
@@ -263,8 +316,8 @@ async function jiralize() {
       stringAnexos += `\n${anexo.nomeDoArquivo} - ${anexo.tamanho}`;
     }
 
-    let email = `----\n ~~~ ${i + 1}° ~~~ \n----\n\n` + `Origem: ${listaDescricaos[i].titulo}\n` + `Destinatário: ${listaDescricaos[i].destinatario}\n` + `Em cópia: ${listaDescricaos[i].copia}`
-     + `Data: ${listaDescricaos[i].data}\n` + `Protocolo: ${listaDescricaos[i].protocolo}\n` + `\n\n` + listaDescricaos[i].conteudo + stringAnexos;
+    let email = `----\n ~~~ ${i + 1}° ~~~ \n----\n\n` + `Origem: ${listaDescricaos[i].titulo}\n` + `Destinatário: ${listaDescricaos[i].destinatario}\n` + `${listaDescricaos[i].copia ? `Em cópia: ${listaDescricaos[i].copia}\n` : ""}`
+     + `Data: ${listaDescricaos[i].data}\n` + `Protocolo: ${listaDescricaos[i].protocolo}\n` + `\n` + listaDescricaos[i].conteudo + stringAnexos;
     
 
     descricao += email + "\n\n";
