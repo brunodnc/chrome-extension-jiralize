@@ -1,5 +1,5 @@
 # chrome-extension-jiralize
-An extension to automate reading e-mail and filling JIRA cards
+An extension to automate reading e-mail and filling JIRA cards that I used to automate an dauting task at work
 
 Click on Ler PA while you face the menacing PA,
 
