@@ -14,7 +14,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             value = ""
             sendResponse({value: null})
             break
+        case "redirect":
+            chrome.tabs.query({currentWindow: true, active: true}, function (tab) {
+                const pa = message.value;
+                const url= `http://jira.prodemge.gov.br:8080/issues/?jql=%22Protocolo%20PA%22%20~%20${pa}`
+                chrome.tabs.update(tab.id, {url: url});
+            });
+            sendResponse({value: null})
+            break
         }
+        
+        
         return true
 
         async function sendAfterSet() {
@@ -30,3 +40,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             value = "Error: Document is not Jiralizeable"
         }
     });
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    // Find the dialog in the DOM and send back information about it
+    
+  });

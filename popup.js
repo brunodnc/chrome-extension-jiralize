@@ -19,6 +19,27 @@ document.getElementById("readPA").onclick = () => {
   });
 }
 
+document.getElementById("readJira").onclick = () => {
+  chrome.runtime.sendMessage({method: "clear" }, () => {
+    chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+      chrome.scripting.executeScript({
+        target: { tabId: tabs[0].id },
+        function: getJiraInfo
+      }, () => {
+        if (chrome.runtime.lastError) {
+          document.getElementById("error").value = "Error: " + chrome.runtime.lastError.message
+        }
+        else {
+          chrome.runtime.sendMessage({method: "get"}, (response) => {
+            document.getElementById("jiraRead").className = 'visible';
+            document.getElementById("error").value = response.value;
+          });
+        }
+      });
+    });
+  });
+}
+
 document.getElementById("inserirComentarios").addEventListener("click", async function() {
         chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
           const quantidade = document.getElementById("quantidadeComentarios").value;
@@ -44,11 +65,11 @@ document.getElementById("inserirComentarios").addEventListener("click", async fu
     });
   });
 
-document.getElementById("pesquisarPorUltimoPA").addEventListener("click", async function() {
+document.getElementById("pesquisarPorTodosPA").addEventListener("click", async function() {
   chrome.tabs.query({ active: true, currentWindow: true}, function(tabs) {
     chrome.scripting.executeScript({
       target: { tabId: tabs[0].id },
-      function: pesquisarPorUltimoPA,
+      function: pesquisarPorTodosPA,
     }, () => {
       if (chrome.runtime.lastError) {
         document.getElementById("error").innerText = "Error: " + chrome.runtime.lastError.message;
@@ -75,7 +96,40 @@ document.getElementById("pesquisarPorPrimeiroPA").addEventListener("click", asyn
   })
 })
 
+document.getElementById("pesquisarPorUltimoPA").addEventListener("click", async function() {
+  chrome.tabs.query({ active: true, currentWindow: true}, function(tabs) {
+    chrome.scripting.executeScript({
+      target: { tabId: tabs[0].id },
+      function: pesquisarPorUltimoPA,
+    }, () => {
+      if (chrome.runtime.lastError) {
+        document.getElementById("error").innerText = "Error: " + chrome.runtime.lastError.message;
+      } else {
+        window.close();
+      }
+    })
+  })
+})
 
+document.getElementById("pastePADemanda").onclick = () => {
+  chrome.runtime.sendMessage({method: "get" }, () => {
+    chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+      chrome.scripting.executeScript({
+        target: { tabId: tabs[0].id },
+        function: demandalize
+      }, () => {
+        if (chrome.runtime.lastError) {
+          document.getElementById("error").value = "Error: " + chrome?.runtime?.lastError?.message || "erro não identificado"
+        }
+        else {
+          chrome.runtime.sendMessage({method: "get"}, (response) => {
+            document.getElementById("error").innerText = "PA: " + response.value.title + " devidamente demandalizado";
+          });
+        }
+      });
+    });
+  });
+}
 
 document.getElementById("pastePA").onclick = () => {
   chrome.runtime.sendMessage({method: "get" }, () => {
@@ -85,11 +139,11 @@ document.getElementById("pastePA").onclick = () => {
         function: jiralize
       }, () => {
         if (chrome.runtime.lastError) {
-          document.getElementById("error").value = "Error: " + chrome.runtime.lastError.message
+          document.getElementById("error").value = "Error: " + chrome?.runtime?.lastError?.message || "erro não identificado"
         }
         else {
           chrome.runtime.sendMessage({method: "get"}, (response) => {
-            document.getElementById("error").innerText = response.value;
+            document.getElementById("error").innerText = "PA: " + response.value.title + " devidamente jiralizado";
           });
         }
       });
@@ -217,7 +271,9 @@ function getDocumentInfo() {
 
   // actual function
   const titulo = document.querySelector('strong.rel.no-mobile').innerText;
-  const protocolosAtendimento = Array.from(document.querySelectorAll("span.de.direita"), (pa) => pa.innerText.split(" ")[1]);
+  let protocolosAtendimento = Array.from(document.querySelectorAll("span.de.direita"), (pa) => pa.innerText.split(" ")[1]);
+  const characters = protocolosAtendimento.join("").length;
+  if (characters > 254) protocolosAtendimento = [protocolosAtendimento[0], protocolosAtendimento[protocolosAtendimento.length - 1]];
   let data = document.querySelector('span.direita.dataMensagem').innerText;
   data = formatarData(data);
   const mensagemUltimoCliente = document.querySelectorAll('h5');
@@ -230,8 +286,28 @@ function getDocumentInfo() {
   const result = {
     titulo, protocolosAtendimento, data, ultimoCliente, listaDescricaos
   }
+  chrome.runtime.sendMessage({method: "set", value: JSON.stringify(result)}) ;
+}
 
-  console.log("valor no getDocumentInfo: ", result);
+async function getJiraInfo() {
+
+  const title = document.getElementById("summary-val").innerText;
+  const pa = document.getElementById("customfield_10215-val").innerText;
+
+  const dateRegex = /\d{4}-\d{2}-\d{2}/;
+  const splittedDate = document.querySelector(".dates").innerHTML.match(dateRegex)[0].split("-");
+  const date = splittedDate[2] + "/" + splittedDate[1] + "/" + splittedDate[0]
+  
+  const responsavel = document.getElementById("customfield_10007-val").innerText;
+
+  const jira = document.querySelector("a#key-val.issue-link").innerText;
+  const urlJira = `http://jira.prodemge.gov.br:8080/browse/${jira}`
+  const nJira = jira.split("-")[1]
+
+  const descricao = document.querySelector("div.user-content-block").innerText;
+
+  const result = { title, pa, date, responsavel, jira, urlJira, nJira, descricao }
+  console.log("rodou get jira info", result);
 
   chrome.runtime.sendMessage({method: "set", value: JSON.stringify(result)}) ;
 }
@@ -270,24 +346,25 @@ async function inserirComentarios(quantidade) {
   commentArea.value = descricao;
 }
 
+async function pesquisarPorTodosPA() {
+  const { value } = await chrome.runtime.sendMessage({method: "get"});
+  documento = JSON.parse(value);
+  const pa = `"${documento.protocolosAtendimento.join("%2C%")}"`;
+  chrome.runtime.sendMessage({method: "redirect", value: pa });
+}
+
 async function pesquisarPorPrimeiroPA() {
   const { value } = await chrome.runtime.sendMessage({method: "get"});
   documento = JSON.parse(value);
-
-  const inputBusca = document.querySelector("textarea#advanced-search");
-  inputBusca.value = `"Protocolo PA" ~ ` + documento.protocolosAtendimento[0];
-  inputBusca.click();
-  inputBusca.dispatchEvent(new KeyboardEvent('keydown', {key: "Enter"}))
+  const pa = documento.protocolosAtendimento[0];
+  chrome.runtime.sendMessage({method: "redirect", value: pa });
 }
 
 async function pesquisarPorUltimoPA() {
   const { value } = await chrome.runtime.sendMessage({method: "get"});
   documento = JSON.parse(value);
-
-  const inputBusca = document.querySelector("textarea#advanced-search");
-  inputBusca.value = `"Protocolo PA" ~ ` + documento.protocolosAtendimento[documento.protocolosAtendimento.length - 1];
-  inputBusca.click();
-  inputBusca.dispatchEvent(new KeyboardEvent('keydown', {key: "Enter"}))
+  const pa = documento.protocolosAtendimento[documento.protocolosAtendimento.length - 1];
+  chrome.runtime.sendMessage({method: "redirect", value: pa });
 }
 
 
@@ -325,6 +402,34 @@ async function jiralize() {
 
   const descricaoJira = document.querySelector("textarea#description");
   descricaoJira.value = descricao;
+}
 
-  console.log(descricao);
+async function demandalize() {
+  const { value } = await chrome.runtime.sendMessage({method: "get"});
+  documento = JSON.parse(value);
+  const dialog = document.getElementById("body1").querySelector("iframe").contentWindow.document;
+
+  console.log(dialog.getElementById("formDemandaGerente:descricaoNovaDemanda"));
+
+  const descricaoDemanda = dialog.getElementById("formDemandaGerente:descricaoNovaDemanda");
+  descricaoDemanda.value = documento.title;
+
+  console.log(descricaoDemanda);
+  
+  const protocoloPADemanda = dialog.getElementById("formDemandaGerente:protocoloPANovaDemanda");
+  protocoloPADemanda.value = documento.pa;
+
+  const dataDemanda = dialog.getElementById("formDemandaGerente:dataInicioNovaDemanda_input");
+  dataDemanda.value = documento.date;
+
+  const responsavelDemanda = dialog.getElementById("formDemandaGerente:responsavelNovaDemanda");
+  responsavelDemanda.value = documento.responsavel;
+  
+
+  const nJiraDemanda = dialog.getElementById("formDemandaGerente:nrJiraNovaDemanda");
+  nJiraDemanda.value = documento.nJira;
+
+  const urlJiraDemanda = dialog.getElementById("formDemandaGerente:urlJiraNovaDemanda");
+  urlJiraDemanda.value = documento.urlJira;
+
 }

@@ -2,11 +2,16 @@
 <html>
 <head>
     <style>
+        button {
+            cursor: pointer
+        }
         .visible {
             visibility: visible;
+            width: 225px;
         }
         .invisible {
             visibility: hidden;
+            width: 225px;
         }
 
         .flex {
@@ -21,31 +26,156 @@
 
         .flex-row {
             flex-wrap: nowrap;
+            width: 225px;
+            margin: 0 auto;
+            padding-bottom: 0.2rem;
         }
 
+        .paSearch {
+            width: 225px;
+        }
 
-    </style>
+        .commentQuantityInput {
+            width: 30px;
+        }
+
+        .read {
+            width: 225px;  
+            background-color: white;
+            color: #003cff;
+            border: 1px solid #000;
+            padding: 5px 20px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .read:hover {
+            background-color: #003cff;
+            color: white;
+            border: solid 1px #ccc;
+        }
+
+        .lizes {
+            width: 225px;
+            background-color: white;
+            color: red;
+            border: 1px solid #000;
+            padding: 5px 20px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 1.5rem;
+        }
+
+        .lizes:hover {
+            background-color: red; 
+            color: white;
+            border: solid 1px #ccc;
+        }
+
+        label[for="inserirComentarios"] {
+            margin-right: 10px;
+            font-size: 1.1rem;
+        }
+
+        .commentQuantityInput {
+        width: 62px;
+        padding: 5px;  
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 16px;
+        }
+
+        #inserirComentarios {
+        background-color: #003cff;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        padding: 5px 10px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin: 0.3rem 0;
+        width: 225px;
+        font-weight: bold;
+        box-sizing: border-box;
+        border: solid 1px #ccc;
+        }
+
+        #inserirComentarios:hover {
+        font-size: 16px;
+        background-color: white;
+        color: #003cff;
+        border: solid 1px #003cff;
+        }
+
+        .paSearch {
+            background-color: white;
+            color: #003cff;
+            border: 1px solid #000;
+            padding: 5px 20px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 0.8rem;
+        }
+
+        .paSearch:last-child {
+            margin-bottom: 0;
+        }
+
+        .paSearch:hover {
+            background-color: #003cff;
+            color: white;
+            border: solid 1px #ccc;
+        }
+
+        #title {
+            margin: 0 auto;
+            font-size: 1.3rem;
+        }
+</style>
     
 </head>
 <body>
     <section class="flex">
-        <h1 id="title">Jiralize-se.</h1>
+        <h1 id="title">Jiralize-se</h1>
+        <br>
         <div class="flex-row">
-            <button class="visible" id="readPA">Ler PA</button>
-            <p id="messageRead" class="invisible">PA lido</p>
+                <button class="read" id="readPA">Ler PA</button>
+                <button class="lizes" id="pastePA">JIRALIZE</button>
+                <div id="messageRead" class="invisible">PA lido</div>
         </div>
         <div class="flex-row">
-            <label for="inserirComentarios">Inserir os &uacute;ltimos </label><input id="quantidadeComentarios" type="number" min="1">
+            <button class="read" id="readJira">Ler Jira</button>
+            <button class="lizes" id="pastePADemanda">DEMANDALIZE</button>
+            <div id="jiraRead" class="invisible">JIRA lido</div>
+        </div>
+        <div class="flex-row">
+            <label for="inserirComentarios">Inserir os &uacute;ltimos </label>
+            <input class="commentQuantityInput" id="quantidadeComentarios" type="number" min="1">
             <button id="inserirComentarios">Coment&aacute;rios</button>
         </div>
         <br>
         <div class="flex-row">
-            <button id="pesquisarPorPrimeiroPA">Pesquisar pelo primeiro PA</button>
-            <button id="pesquisarPorUltimoPA">Pesquisar pelo &uacute;ltimo PA</button>
+            <button class="paSearch" id="pesquisarPorPrimeiroPA">Pesquisar pelo <i>primeiro</i> PA</button>
+            <button class="paSearch" id="pesquisarPorUltimoPA">Pesquisar pelo <i>&uacute;ltimo</i> PA</button>
+            <button class="paSearch" id="pesquisarPorTodosPA">Pesquisar por <i>todos</i> PA</button>
         </div>
         <br>
-        <span id="error"></span>
-        <button id="pastePA">JIRALIZE</button>
+        <span id="error" style="margin: 0 auto"></span>
+        <br>
+        
     </section>
 </body>
 <script src="popup.js" type="module"></script>
