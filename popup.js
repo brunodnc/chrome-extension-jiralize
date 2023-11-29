@@ -123,7 +123,8 @@ document.getElementById("pastePADemanda").onclick = () => {
         }
         else {
           chrome.runtime.sendMessage({method: "get"}, (response) => {
-            document.getElementById("error").innerText = "PA: " + response.value.title + " devidamente demandalizado";
+            const result = JSON.parse(response.value);
+            document.getElementById("error").value = "PA: " + result.titulo + " devidamente demandalizado";
           });
         }
       });
@@ -143,7 +144,8 @@ document.getElementById("pastePA").onclick = () => {
         }
         else {
           chrome.runtime.sendMessage({method: "get"}, (response) => {
-            document.getElementById("error").innerText = "PA: " + response.value.title + " devidamente jiralizado";
+            const result = JSON.parse(response.value);
+            document.getElementById("error").innerText = "PA: " + result.titulo + " devidamente jiralizado";
           });
         }
       });
@@ -198,14 +200,14 @@ function getDocumentInfo() {
   
 
   function extrairDescricaoDoHTML(html) {
+    console.log("html", html);
     const patternTitulo = /<h5[^>]*>(.*?)<\/h5>/s;
     const patternProtocolo = /<span[^>]*>Protocolo:(.*?)<\/span>/s;
     const patternDestinatario = /Para:(.*?)<br[^>]*>/s;
     const patternCopia = /Cópia:(.*?)<\/p>/s;
     const patternConteudo = /<pre[^>]*>(.*?)<\/pre>/s;
-    const patternAnexo = /<a[^>]*><span[^>]*>(.*?)<\/span><span[^>]*>(.*?)<\/span><\/a>/s;
     const patternData = /(\d{2}\/\d{2}\/\d{4})/s;
-    const patternNomeAnexos = /(?<=class="ic de mime-img">).*?(?=<\/span>)/g
+    const patternNomeAnexos = /<span[^>]*class="ic de[^"]*">(.*?)<\/span>/g;
     const patternTamanhoAnexos = /(?<=class="menor tc">).*?(?=<\/span>)/g;
   
     const matchTitulo = html.match(patternTitulo);
@@ -213,9 +215,8 @@ function getDocumentInfo() {
     const matchDestinatario = html.match(patternDestinatario);
     const matchCopia = html.match(patternCopia);
     const matchConteudo = html.match(patternConteudo);
-    const matchAnexo = html.match(patternAnexo);
     const matchData = html.match(patternData);
-    const matchNomeAnexos = html.match(patternNomeAnexos);
+    const matchNomeAnexos = Array.from(html.matchAll(patternNomeAnexos), m => m[1].replace(" ", ""));
     const matchTamanhoAnexos = html.match(patternTamanhoAnexos);
     const descricao = {};
   
@@ -236,27 +237,15 @@ function getDocumentInfo() {
     }
 
     if (matchDestinatario && matchDestinatario.length > 1) {
-      descricao.destinatario = parseHtmlToString(matchDestinatario[1].trim()).replace(descricao.conteudo, "");
-    }
-  
-    if (matchAnexo && matchAnexo.length > 2) {
-      descricao.anexo = {
-        nome: parseHtmlToString(matchAnexo[1]),
-        tamanho: parseHtmlToString(matchAnexo[2]),
-      };
+      descricao.destinatario = parseHtmlToString(matchDestinatario[1].trim()).replaceAll(descricao.conteudo, "");
     }
 
     descricao.anexos = [];
 
-    if (matchNomeAnexos && matchNomeAnexos.length > 1) {
-      for (let i = 0; i < matchNomeAnexos.length; i += 1) {
-        descricao.anexos.push({nomeDoArquivo: matchNomeAnexos[i]})
-      }
-    }
 
-    if (matchTamanhoAnexos && matchTamanhoAnexos.length > 1) {
-      for (let i = 0; i < matchTamanhoAnexos.length; i += 1) {
-        descricao.anexos[i] = {...descricao.anexos[i], tamanho: matchTamanhoAnexos[i] };
+    if ((matchNomeAnexos && matchNomeAnexos.length >= 1) && (matchTamanhoAnexos && matchTamanhoAnexos.length >= 1)) {
+      for (let i = 0; i < matchNomeAnexos.length; i += 1) {
+        descricao.anexos.push({nomeDoArquivo: matchNomeAnexos[i], tamanho: matchTamanhoAnexos[i]});
       }
     }
     
@@ -286,6 +275,7 @@ function getDocumentInfo() {
   const result = {
     titulo, protocolosAtendimento, data, ultimoCliente, listaDescricaos
   }
+  console.log("result: ", result);
   chrome.runtime.sendMessage({method: "set", value: JSON.stringify(result)}) ;
 }
 
@@ -333,7 +323,7 @@ async function inserirComentarios(quantidade) {
     const anexos = listaDescricaos[i].anexos;
 
     for (let anexo of anexos) {
-      stringAnexos += `\n${anexo.nomeDoArquivo} - ${anexo.tamanho}`;
+      stringAnexos += `\n${anexo.nomeDoArquivo.split(" ").join("")} - ${anexo.tamanho}`;
     }
 
     let email = `----\n ~~~ ${quantidadeNaoLida + i + 1}° ~~~ \n----\n\n` + `Origem: ${listaDescricaos[i].titulo}\n` + `Destinatário: ${listaDescricaos[i].destinatario}\n` + `${listaDescricaos[i].copia ? `Em cópia: ${listaDescricaos[i].copia}\n` : ""}`
@@ -414,7 +404,8 @@ async function demandalize() {
   const descricaoDemanda = dialog.getElementById("formDemandaGerente:descricaoNovaDemanda");
   descricaoDemanda.value = documento.title;
 
-  console.log(descricaoDemanda);
+  const conteudoDemanda = dialog.getElementById("formDemandaGerente:corpoNovaDemanda");
+  conteudoDemanda.value = documento.descricao;
   
   const protocoloPADemanda = dialog.getElementById("formDemandaGerente:protocoloPANovaDemanda");
   protocoloPADemanda.value = documento.pa;

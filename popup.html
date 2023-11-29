@@ -2,6 +2,39 @@
 <html>
 <head>
     <style>
+
+        body {
+            --h: 208;
+            --s: 60%;
+            --l: 39%;
+            --a: .17;
+            --b: 0;
+            --cor-primaria: hsl(var(--h) var(--s) var(--l) / 1);
+            --cor-primaria-media: hsl(var(--h) var(--s) var(--l) / .5);
+            --cor-primaria-clara: hsl(var(--h) var(--s) var(--l) / var(--a));
+            --cor-destaque: hsl(var(--h) 100% 55%);
+            --cor-cabecalho: var(--cor-primaria);
+            --cor-destaque-claro: rgba(243,255,25,.24);
+            --cor-bg: #fff;
+            --cor-bg-opaco: rgba(255,255,255,.85);
+            --cor-bg-destaque: rgba(0,0,0,.1);
+            --cor-bg-destaque-claro: rgba(0,0,0,.05);
+            --cor-fonte: rgba(var(--b),var(--b),var(--b),.8);
+            --cor-fonte-forte: rgb(var(--b),var(--b),var(--b));
+            --cor-fonte-fraca: rgba(var(--b),var(--b),var(--b),.544);
+            --cor-cinza: rgba(var(--b),var(--b),var(--b),.05);
+            --cor-vermelho: #c81d14;
+            --cor-alerta: var(--cor-primaria);
+            --cor-verde: #00752b;
+            --cor-marca-texto: #f3ff19;
+            --margem: 24px;
+            --tam-col-menu: 200px;
+            --tam-topo: calc(36px + var(--margem));
+            --tema-ic: 1px;
+            --tema-ic2: 6px;
+            background-color: var(--cor-bg-destaque-claro);
+        }
+        
         button {
             cursor: pointer
         }
@@ -41,9 +74,9 @@
 
         .read {
             width: 225px;  
-            background-color: white;
-            color: #003cff;
-            border: 1px solid #000;
+            background-color: var(--cor-bg);
+            color: var(--cor-primaria);
+            border: 1px solid var(--cor-primaria);
             padding: 5px 20px;
             border-radius: 5px;
             font-size: 16px;
@@ -54,15 +87,15 @@
         }
 
         .read:hover {
-            background-color: #003cff;
-            color: white;
+            background-color: var(--cor-destaque);
+            color: var(--cor-bg);
             border: solid 1px #ccc;
         }
 
         .lizes {
             width: 225px;
-            background-color: white;
-            color: red;
+            background-color: var(--cor-bg);
+            color: var(--cor-destaque);
             border: 1px solid #000;
             padding: 5px 20px;
             border-radius: 5px;
@@ -75,8 +108,8 @@
         }
 
         .lizes:hover {
-            background-color: red; 
-            color: white;
+            background-color: var(--cor-vermelho); 
+            color: var(--cor-bg);
             border: solid 1px #ccc;
         }
 
@@ -91,11 +124,12 @@
         border: 1px solid #ccc;
         border-radius: 5px;
         font-size: 16px;
+        color: var(--cor-fonte-forte)
         }
 
         #inserirComentarios {
-        background-color: #003cff;
-        color: #fff;
+        background-color: var(--cor-destaque);
+        color: var(--cor-bg);
         border: none;
         border-radius: 5px;
         padding: 5px 10px;
@@ -111,14 +145,14 @@
 
         #inserirComentarios:hover {
         font-size: 16px;
-        background-color: white;
-        color: #003cff;
-        border: solid 1px #003cff;
+        background-color: var(--cor-bg);
+        color: var(--cor-destaque);
+        border: solid 1px #ccc;
         }
 
         .paSearch {
-            background-color: white;
-            color: #003cff;
+            background-color: var(--cor-bg);
+            color: var(--cor-destaque);
             border: 1px solid #000;
             padding: 5px 20px;
             border-radius: 5px;
@@ -135,14 +169,15 @@
         }
 
         .paSearch:hover {
-            background-color: #003cff;
-            color: white;
+            background-color: var(--cor-destaque);
+            color: var(--cor-bg);
             border: solid 1px #ccc;
         }
 
         #title {
             margin: 0 auto;
             font-size: 1.3rem;
+            color: var(--cor-fonte-forte)
         }
 </style>
     
